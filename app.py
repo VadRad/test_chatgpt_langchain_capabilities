@@ -1,30 +1,36 @@
 import streamlit as st
-from langchain_openai import ChatOpenAI
+from langchain import OpenAI, ChatOpenAI
 from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
 
-# Streamlit sidebar for OpenAI API key input
-st.sidebar.title("Configuration")
-openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+# Set up Streamlit
+st.title("LangChain Chatbot")
+st.write("This is a simple chatbot using LangChain and Streamlit.")
 
-# Check if API key is provided
-if not openai_api_key:
-    st.warning("Please enter your OpenAI API key in the sidebar.")
-else:
-    # Initialize the ChatOpenAI model
-    chat_model = ChatOpenAI(api_key=openai_api_key, model="gpt-4")
+# Initialize the chat model
+openai_api_key = "your-openai-api-key"
+chat_model = ChatOpenAI(api_key=openai_api_key)
 
-    # Streamlit interface for chat
-    st.title("Chat with GPT-4")
-    st.write("A simple chat interface with GPT-4 using LangChain.")
+# Initialize conversation memory
+memory = ConversationBufferMemory()
 
-    # Input text box for user
-    user_input = st.text_input("You: ")
+# Set up the prompt template
+template = PromptTemplate(
+    template="The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\n{history}\n\nHuman: {input}\nAI:",
+    input_variables=["history", "input"]
+)
 
-    if user_input:
-        # Create a prompt template
-        prompt_template = PromptTemplate.from_template("You: {input}\nAI:")
-        prompt = prompt_template.format(input=user_input)
+# Initialize the conversation chain
+conversation = ConversationChain(
+    llm=chat_model,
+    prompt=template,
+    memory=memory
+)
 
-        # Get the response from the chat model
-        response = chat_model.invoke(prompt)
-        st.write(f"AI: {response}")
+# Chat input
+user_input = st.text_input("You: ", "")
+
+if user_input:
+    response = conversation.predict(input=user_input)
+    st.text_area("Chatbot:", value=response.content, height=200, max_chars=None, key=None)
