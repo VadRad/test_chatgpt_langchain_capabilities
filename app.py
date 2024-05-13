@@ -67,10 +67,17 @@ if openai_api_key:
         if st.button("Send"):
             if user_input:
                 try:
-                    response = conversation.predict(input=user_input)
                     st.session_state.history.append(f"You: {user_input}")
-                    st.session_state.history.append(f"Bot: {response}")
                     st.session_state["input_text"] = ""  # Clear the input text
+
+                    response_container = st.empty()
+                    response_text = ""
+
+                    for chunk in conversation.stream_predict(input=user_input):
+                        response_text += chunk.content
+                        response_container.text(response_text)
+
+                    st.session_state.history.append(f"Bot: {response_text}")
                     logger.info("Successfully generated response from AI.")
                 except Exception as e:
                     if "insufficient_quota" in str(e):
