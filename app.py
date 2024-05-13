@@ -7,7 +7,7 @@ from langchain.memory import (
 )
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Streamlit app
 st.title("LangChain Chat with Memory")
-st.write("Welcome to the LangChain Chat! Type your message below:")
+st.write("Welcome to the LangChain Chat!")
 
 # Sidebar for OpenAI API key input
 st.sidebar.title("Configuration")
@@ -30,7 +30,7 @@ if openai_api_key:
 
         # Initialize the summary memory
         summary_memory = ConversationSummaryMemory(
-            llm=OpenAI(api_key=openai_api_key),
+            llm=ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo"),
             input_key="input"
         )
 
@@ -53,24 +53,35 @@ if openai_api_key:
         )
 
         # Create the conversation chain
-        llm = OpenAI(api_key=openai_api_key, temperature=0)
+        llm = ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", temperature=0, stream=True)
         conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
 
         # Chat history
         if 'history' not in st.session_state:
             st.session_state.history = []
 
-        # Input from user
-        user_input = st.text_input("You:", key="input")
+        # Display chat history
+        chat_placeholder = st.empty()
+        with chat_placeholder.container():
+            for chat in st.session_state.history:
+                st.write(chat)
+
+        # Input from user at the bottom
+        user_input = st.text_input("You:", key="input_text")
 
         # Generate response and update history
         if st.button("Send"):
             if user_input:
+                st.session_state.history.append(f"You: {user_input}")
+                response_container = st.empty()
+                st.session_state["input_text"] = ""  # Clear the input text
+
+                response = ""
                 try:
-                    response = conversation.predict(input=user_input)
-                    st.session_state.history.append(f"You: {user_input}")
+                    for chunk in conversation.predict(input=user_input):
+                        response += chunk["choices"][0]["text"]
+                        response_container.write(f"Bot: {response}")
                     st.session_state.history.append(f"Bot: {response}")
-                    st.session_state.input = ""
                     logger.info("Successfully generated response from AI.")
                 except Exception as e:
                     if "insufficient_quota" in str(e):
@@ -79,10 +90,10 @@ if openai_api_key:
                         st.error("An error occurred while generating the response.")
                     logger.error(f"Error during prediction: {e}")
 
-        # Display chat history
-        if st.session_state.history:
-            for chat in st.session_state.history:
-                st.write(chat)
+                # Update chat history
+                with chat_placeholder.container():
+                    for chat in st.session_state.history:
+                        st.write(chat)
 
         if st.button("Clear Chat"):
             st.session_state.history = []
