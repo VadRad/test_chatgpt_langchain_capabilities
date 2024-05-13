@@ -6,8 +6,8 @@ from langchain.memory import (
     ConversationSummaryMemory,
 )
 from langchain.chains import ConversationChain
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import OpenAI
+from langchain.prompts import PromptTemplate
+from langchain.llms import OpenAI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +30,7 @@ if openai_api_key:
 
         # Initialize the summary memory
         summary_memory = ConversationSummaryMemory(
-            llm=OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", api_base="https://api.openai.com/v1/chat/completions"),
+            llm=OpenAI(api_key=openai_api_key, model="gpt-4"),
             input_key="input"
         )
 
@@ -53,7 +53,7 @@ if openai_api_key:
         )
 
         # Create the conversation chain
-        llm = OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", api_base="https://api.openai.com/v1/chat/completions", temperature=0)
+        llm = OpenAI(api_key=openai_api_key, model="gpt-4", temperature=0)
         conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
 
         # Chat history
