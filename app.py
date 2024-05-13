@@ -30,7 +30,7 @@ if openai_api_key:
 
         # Initialize the summary memory
         summary_memory = ConversationSummaryMemory(
-            llm=OpenAI(api_key=openai_api_key, model="gpt-4"),
+            llm=OpenAI(api_key=openai_api_key),
             input_key="input"
         )
 
@@ -53,7 +53,7 @@ if openai_api_key:
         )
 
         # Create the conversation chain
-        llm = OpenAI(api_key=openai_api_key, model="gpt-4", temperature=0)
+        llm = OpenAI(api_key=openai_api_key, temperature=0)
         conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
 
         # Chat history
