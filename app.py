@@ -1,104 +1,30 @@
 import streamlit as st
-import logging
-from langchain.memory import (
-    CombinedMemory,
-    ConversationBufferMemory,
-    ConversationSummaryMemory,
-)
-from langchain.chains import ConversationChain
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Streamlit app
-st.title("LangChain Chat with Memory")
-st.write("Welcome to the LangChain Chat! Type your message below:")
-
-# Sidebar for OpenAI API key input
+# Streamlit sidebar for OpenAI API key input
 st.sidebar.title("Configuration")
 openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-if openai_api_key:
-    try:
-        # Initialize the recent conversation memory
-        conv_memory = ConversationBufferMemory(
-            memory_key="chat_history_lines", input_key="input"
-        )
-
-        # Initialize the summary memory
-        summary_memory = ConversationSummaryMemory(
-            llm=ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo"),
-            input_key="input"
-        )
-
-        # Combined memory
-        memory = CombinedMemory(memories=[conv_memory, summary_memory])
-
-        # Define the prompt template
-        _DEFAULT_TEMPLATE = """The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-
-        Summary of conversation:
-        {history}
-        Current conversation:
-        {chat_history_lines}
-        Human: {input}
-        AI:"""
-        
-        PROMPT = PromptTemplate(
-            input_variables=["history", "input", "chat_history_lines"],
-            template=_DEFAULT_TEMPLATE,
-        )
-
-        # Create the conversation chain
-        llm = ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", temperature=0)
-        conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
-
-        # Chat history
-        if 'history' not in st.session_state:
-            st.session_state.history = []
-
-        # Input from user
-        user_input = st.text_input("You:", key="input_text")
-
-        # Generate response and update history
-        if st.button("Send"):
-            if user_input:
-                try:
-                    st.session_state.history.append(f"You: {user_input}")
-                    st.session_state["input_text"] = ""  # Clear the input text
-
-                    response_container = st.empty()
-                    response_text = ""
-
-                    for chunk in conversation.stream_predict(input=user_input):
-                        response_text += chunk.content
-                        response_container.text(response_text)
-
-                    st.session_state.history.append(f"Bot: {response_text}")
-                    logger.info("Successfully generated response from AI.")
-                except Exception as e:
-                    if "insufficient_quota" in str(e):
-                        st.error("You have exceeded your OpenAI quota. Please check your plan and billing details.")
-                    else:
-                        st.error("An error occurred while generating the response.")
-                    logger.error(f"Error during prediction: {e}")
-
-        # Display chat history
-        if st.session_state.history:
-            for chat in st.session_state.history:
-                st.write(chat)
-
-        if st.button("Clear Chat"):
-            st.session_state.history = []
-            conv_memory.clear()
-            summary_memory.clear()
-            logger.info("Chat history and memories cleared.")
-
-    except Exception as e:
-        st.error("An error occurred during initialization. Please check your API key and try again.")
-        logger.error(f"Initialization error: {e}")
+# Check if API key is provided
+if not openai_api_key:
+    st.warning("Please enter your OpenAI API key in the sidebar.")
 else:
-    st.write("Please enter your OpenAI API Key in the sidebar to start chatting.")
+    # Initialize the ChatOpenAI model
+    chat_model = ChatOpenAI(api_key=openai_api_key, model="gpt-4")
+
+    # Streamlit interface for chat
+    st.title("Chat with GPT-4")
+    st.write("A simple chat interface with GPT-4 using LangChain.")
+
+    # Input text box for user
+    user_input = st.text_input("You: ")
+
+    if user_input:
+        # Create a prompt template
+        prompt_template = PromptTemplate.from_template("You: {input}\nAI:")
+        prompt = prompt_template.format(input=user_input)
+
+        # Get the response from the chat model
+        response = chat_model(prompt)
+        st.write(f"AI: {response}")
