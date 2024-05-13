@@ -1,5 +1,5 @@
 import streamlit as st
-from langchain.memory import ConversationBufferMemory, SummaryMemory
+from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
 from langchain.chains import ConversationChain
 from langchain.llms import OpenAI
 
@@ -16,7 +16,7 @@ if openai_api_key:
     recent_memory = ConversationBufferMemory()
 
     # Initialize the summary memory
-    summary_memory = SummaryMemory()
+    summary_memory = ConversationSummaryMemory()
 
     # Create a conversation chain with both memories
     conversation = ConversationChain(
