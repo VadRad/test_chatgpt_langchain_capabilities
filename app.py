@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Streamlit app
 st.title("LangChain Chat with Memory")
-st.write("Welcome to the LangChain Chat!")
+st.write("Welcome to the LangChain Chat! Type your message below:")
 
 # Sidebar for OpenAI API key input
 st.sidebar.title("Configuration")
@@ -53,35 +53,24 @@ if openai_api_key:
         )
 
         # Create the conversation chain
-        llm = ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", temperature=0, stream=True)
+        llm = ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", temperature=0)
         conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
 
         # Chat history
         if 'history' not in st.session_state:
             st.session_state.history = []
 
-        # Display chat history
-        chat_placeholder = st.empty()
-        with chat_placeholder.container():
-            for chat in st.session_state.history:
-                st.write(chat)
-
-        # Input from user at the bottom
+        # Input from user
         user_input = st.text_input("You:", key="input_text")
 
         # Generate response and update history
         if st.button("Send"):
             if user_input:
-                st.session_state.history.append(f"You: {user_input}")
-                response_container = st.empty()
-                st.session_state["input_text"] = ""  # Clear the input text
-
-                response = ""
                 try:
-                    for chunk in conversation.predict(input=user_input):
-                        response += chunk["choices"][0]["text"]
-                        response_container.write(f"Bot: {response}")
+                    response = conversation.predict(input=user_input)
+                    st.session_state.history.append(f"You: {user_input}")
                     st.session_state.history.append(f"Bot: {response}")
+                    st.session_state["input_text"] = ""  # Clear the input text
                     logger.info("Successfully generated response from AI.")
                 except Exception as e:
                     if "insufficient_quota" in str(e):
@@ -90,10 +79,10 @@ if openai_api_key:
                         st.error("An error occurred while generating the response.")
                     logger.error(f"Error during prediction: {e}")
 
-                # Update chat history
-                with chat_placeholder.container():
-                    for chat in st.session_state.history:
-                        st.write(chat)
+        # Display chat history
+        if st.session_state.history:
+            for chat in st.session_state.history:
+                st.write(chat)
 
         if st.button("Clear Chat"):
             st.session_state.history = []
