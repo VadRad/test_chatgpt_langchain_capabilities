@@ -26,5 +26,5 @@ else:
         prompt = prompt_template.format(input=user_input)
 
         # Get the response from the chat model
-        response = chat_model(prompt)
+        response = chat_model.invoke(prompt)
         st.write(f"AI: {response}")
