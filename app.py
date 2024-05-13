@@ -30,7 +30,7 @@ if openai_api_key:
 
         # Initialize the summary memory
         summary_memory = ConversationSummaryMemory(
-            llm=OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo"),
+            llm=OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", api_base="https://api.openai.com/v1/chat/completions"),
             input_key="input"
         )
 
@@ -53,7 +53,7 @@ if openai_api_key:
         )
 
         # Create the conversation chain
-        llm = OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", temperature=0)
+        llm = OpenAI(api_key=openai_api_key, model="gpt-3.5-turbo", api_base="https://api.openai.com/v1/chat/completions", temperature=0)
         conversation = ConversationChain(llm=llm, verbose=True, memory=memory, prompt=PROMPT)
 
         # Chat history
@@ -73,7 +73,10 @@ if openai_api_key:
                     st.session_state.input = ""
                     logger.info("Successfully generated response from AI.")
                 except Exception as e:
-                    st.error("An error occurred while generating the response.")
+                    if "insufficient_quota" in str(e):
+                        st.error("You have exceeded your OpenAI quota. Please check your plan and billing details.")
+                    else:
+                        st.error("An error occurred while generating the response.")
                     logger.error(f"Error during prediction: {e}")
 
         # Display chat history
