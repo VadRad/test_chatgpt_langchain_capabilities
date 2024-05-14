@@ -25,7 +25,7 @@ def get_response(user_query, chat_history, players):
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    llm = ChatOpenAI(model="gpt-4")
+    llm = ChatOpenAI(model="gpt-4o")
 
     chain = prompt | llm | StrOutputParser()
 
