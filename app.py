@@ -22,7 +22,7 @@ logger.info("App started and page configured.")
 def get_response(user_query, chat_history, players):
     logger.info("Generating response for user query.")
     template = """
-    You are a Dungeon Master for a freeform role-playing. Respond to the user's queries and actions, considering the history of the conversation, the list of players, and the context of a D&amp;D game. Keep the game engaging, challenging, and fun:
+    You are a Dungeon Master for a freeform role-playing. Respond to the user's queries and actions, considering the history of the conversation, the list of players, and the context of a D&D game. Keep the game engaging, challenging, and fun:
 
     You receive input from each player
 
@@ -57,13 +57,13 @@ def generate_initial_prompt(players):
     Ask them what they want to do next
     """
 
-    player_names = ", ".join(players)
-    prompt = ChatPromptTemplate.from_template(template.format(players=player_names))
+    player_descriptions = "\n".join([f"{player['name']} the {player['gender']} {player['race']} {player['class']} - {player['description']}" for player in players])
+    prompt = ChatPromptTemplate.from_template(template.format(players=player_descriptions))
     llm = ChatOpenAI(model="gpt-4o")
     chain = prompt | llm | StrOutputParser()
 
     initial_prompt = chain.stream({
-        "players": player_names,
+        "players": player_descriptions,
     })
 
     logger.info("Initial prompt generated.")
@@ -71,9 +71,9 @@ def generate_initial_prompt(players):
 
 def increment_turn():
     logger.info("Incrementing turn.")
-    current_player_name = st.session_state.players[st.session_state.current_player]
-    current_player = st.session_state.current_player
-    st.session_state.player_inputs[current_player_name] = st.session_state[f'input_{current_player_name}_{current_player}']
+    current_player = st.session_state.players[st.session_state.current_player]
+    current_player_name = current_player["name"]
+    st.session_state.player_inputs[current_player_name] = st.session_state[f'input_{current_player_name}_{st.session_state.current_player}']
     st.session_state.current_player += 1
     logger.info(f"Turn incremented to {st.session_state.current_player}.")
 
@@ -101,14 +101,25 @@ if "awaiting_input" not in st.session_state:
 if not st.session_state.game_started:
     with st.form("registration_form"):
         player_name = st.text_input("Enter your name:")
+        player_gender = st.selectbox("Select your gender:", ["Male", "Female", "Other"])
+        player_race = st.selectbox("Select your race:", ["Human", "Elf", "Dwarf", "Orc", "Halfling", "Other"])
+        player_class = st.selectbox("Select your class:", ["Warrior", "Mage", "Rogue", "Cleric", "Ranger", "Other"])
+        player_description = st.text_area("Describe your character (optional):")
         submitted = st.form_submit_button("Join the game")
         if submitted and player_name:
-            st.session_state.players.append(player_name)
+            player_info = {
+                "name": player_name,
+                "gender": player_gender,
+                "race": player_race,
+                "class": player_class,
+                "description": player_description
+            }
+            st.session_state.players.append(player_info)
             logger.info(f"Player {player_name} joined the game.")
     if len(st.session_state.players) >= 2:  # Minimum 2 players to start the game
         if st.button("Start the Game"):
             st.session_state.game_started = True
-            logger.info("Game started with players: " + ", ".join(st.session_state.players))
+            logger.info("Game started with players: " + ", ".join([player["name"] for player in st.session_state.players]))
 
 # Game conversation
 if st.session_state.game_started:
@@ -128,7 +139,8 @@ if st.session_state.game_started:
 
     if st.session_state.current_player < len(st.session_state.players):
         # User input
-        current_player_name = st.session_state.players[st.session_state.current_player]
+        current_player = st.session_state.players[st.session_state.current_player]
+        current_player_name = current_player["name"]
         with st.chat_message("AI"):
             st.markdown(f"{current_player_name}, what do you want to do?")
 
@@ -158,4 +170,4 @@ if st.session_state.game_started:
 # Display the list of players on the right (sidebar)
 st.sidebar.title("Players")
 for player in st.session_state.players:
-    st.sidebar.write(player)
+    st.sidebar.write(f"{player['name']} - {player['gender']} {player['race']} {player['class']} - {player['description'] if player['description'] else 'No description'}")
