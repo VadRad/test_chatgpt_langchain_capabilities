@@ -56,9 +56,10 @@ def get_response(user_query, chat_history, players):
 def generate_initial_prompt(players):
     logger.info("Generating initial prompt.")
     template = """
-    You are a Dungeon Master for a freeform role-playing. The following players have joined the game:
+    You are a Master for a freeform role-playing. The following players have joined the game:
     {players}
     Create an engaging and exciting start to the adventure considering the players' names and their potential roles in the game.
+    Let it be not be trivial. Avoid standard Dnd tropes and make it unique
     Let it be short. Greet players and create a hook
     You describe it to a players
     Ask them what they want to do next.
