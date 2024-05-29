@@ -24,7 +24,8 @@ def get_response(user_query, chat_history, players):
     template = """
     You are a Dungeon Master for a freeform role-playing. Respond to the user's queries and actions, considering the history of the conversation, the list of players, and the context of a D&D game. Keep the game engaging, challenging, and fun:
 
-    You receive input from each player
+    You receive input from each player.
+    Отвечай только на русском языке.
 
     Chat history: {chat_history}
 
@@ -54,7 +55,8 @@ def generate_initial_prompt(players):
     Create an engaging and exciting start to the adventure considering the players' names and their potential roles in the game.
     Let it be short. Greet players and create a hook
     You describe it to a players
-    Ask them what they want to do next
+    Ask them what they want to do next.
+    отвечай только на русском языке
     """
 
     player_descriptions = "\n".join([f"{player['name']} the {player['gender']} {player['race']} {player['class']} - {player['description']}" for player in players])
