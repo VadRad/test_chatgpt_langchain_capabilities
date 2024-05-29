@@ -25,6 +25,10 @@ def get_response(user_query, chat_history, players):
     You are a Dungeon Master for a freeform role-playing. Respond to the user's queries and actions, considering the history of the conversation, the list of players, and the context of a D&D game. Keep the game engaging, challenging, and fun:
 
     You receive input from each player.
+    make it hard and challenging.
+    so players actions will sometimes fail and the game be more dynamic
+    lead them to initial goal 
+    and provide challamges based on players background
     Отвечай только на русском языке.
 
     Chat history: {chat_history}
