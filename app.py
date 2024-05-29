@@ -29,6 +29,8 @@ def get_response(user_query, chat_history, players):
     so players actions will sometimes fail and the game be more dynamic
     lead them to initial goal 
     and provide challamges based on players background
+    add some actions at the end to drive players further in needed
+    do not repeat players input much, just react on them amd give some context for other players
     Отвечай только на русском языке.
 
     Chat history: {chat_history}
